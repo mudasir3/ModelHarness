@@ -20,5 +20,5 @@ def make_provider(spec: ModelSpec) -> Provider:
     if spec.provider == "openai":
         from harness.providers.openai import OpenAIProvider
 
-        return OpenAIProvider()
+        return OpenAIProvider(spec)
     raise ValueError(f"Unknown provider {spec.provider}")

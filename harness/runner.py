@@ -174,6 +174,26 @@ def completed_keys(run_dir: Path) -> set[str]:
     return done
 
 
+class Throttle:
+    """Spaces call starts for one model at least min_interval_s apart (free-tier RPM limits).
+    Retries go through it too, so a 429 storm cannot burst past the limit."""
+
+    def __init__(self, min_interval_s: float) -> None:
+        self.min_interval_s = min_interval_s
+        self._next = 0.0
+        self._lock = asyncio.Lock()
+
+    async def wait(self) -> None:
+        if self.min_interval_s <= 0:
+            return
+        async with self._lock:
+            now = time.monotonic()
+            delay = self._next - now
+            self._next = max(now, self._next) + self.min_interval_s
+        if delay > 0:
+            await asyncio.sleep(delay)
+
+
 class ResponseCache:
     """Development-only cache so prompt iteration does not re-pay. Never use for measured runs:
     cached rows carry no real latency."""
@@ -211,6 +231,7 @@ async def run_experiment(
             f"Worst-case cost ${upper:.4f} exceeds budget_usd ${cfg.budget_usd:.2f}. "
             "Lower max_tokens, repeats or dataset size, or raise the budget."
         )
+    providers = providers or {k: make_provider(s) for k, s in prep.specs.items()}
     if resume:
         if not (run_dir / META_FILE).exists():
             raise ConfigError(f"Nothing to resume in {run_dir}")
@@ -219,7 +240,6 @@ async def run_experiment(
             raise ConfigError(f"{run_dir} already exists; use --resume or a new name")
         _write_run_folder(prep, run_dir, upper)
 
-    providers = providers or {k: make_provider(s) for k, s in prep.specs.items()}
     for key, provider in providers.items():
         if cfg.temperature is not None and not provider.supports_temperature:
             log(f"note: {key} ({provider.name}) does not accept temperature; it will not be sent")
@@ -237,6 +257,12 @@ async def run_experiment(
     log(f"{len(todo)} calls to make ({len(done)} already done), upper bound ${upper:.4f}")
 
     sem = asyncio.Semaphore(cfg.concurrency)
+    throttles = {k: Throttle(s.min_interval_s) for k, s in prep.specs.items()}
+
+    async def call(model_key: str, req: CallRequest) -> Result:
+        await throttles[model_key].wait()
+        return await providers[model_key].complete(req)
+
     lock = asyncio.Lock()
     spent = 0.0
     reserved = 0.0
@@ -288,7 +314,7 @@ async def run_experiment(
                     result, retries = cached, 0
                 else:
                     result, retries = await with_retries(
-                        lambda: providers[key.model_key].complete(req),
+                        lambda: call(key.model_key, req),
                         max_attempts=cfg.max_attempts,
                         on_retry=lambda n, e, d: log(
                             f"retry {n} {key.model_key} {key.item_id}: {e} (sleep {d:.2f}s)"

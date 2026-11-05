@@ -147,3 +147,20 @@ def test_mcnemar():
     assert mcnemar_exact(0, 0) == 1.0
     assert mcnemar_exact(0, 6) == pytest.approx(2 / 64)
     assert mcnemar_exact(3, 3) == 1.0
+
+
+def test_throttle_spaces_calls():
+    import time
+
+    from harness.runner import Throttle
+
+    async def go():
+        throttle = Throttle(0.05)
+        starts = []
+        for _ in range(3):
+            await throttle.wait()
+            starts.append(time.monotonic())
+        return starts
+
+    starts = asyncio.run(go())
+    assert starts[1] - starts[0] >= 0.045 and starts[2] - starts[1] >= 0.045

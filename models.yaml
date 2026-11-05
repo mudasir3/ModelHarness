@@ -41,6 +41,48 @@ models:
     input_price_per_mtok: null
     output_price_per_mtok: null
 
+  # Google Gemini through its OpenAI-compatible endpoint. Free tier: no card needed.
+  # On the free tier you pay $0; the prices below are the paid Standard-tier list prices,
+  # so the report shows what the same run WOULD cost in production.
+  # Confirm IDs with: harness list-models gemini-strong
+  gemini-cheap:
+    provider: openai
+    model_id: gemini-3.1-flash-lite
+    base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+    api_key_env: GEMINI_API_KEY
+    max_tokens_param: max_tokens
+    schema_strict: false
+    reasoning_effort: low          # Gemini 3 models think by default; thinking tokens are billed as output
+    min_interval_s: 4.0            # stay under free-tier requests-per-minute
+    input_price_per_mtok: 0.25
+    output_price_per_mtok: 1.50
+    prices_as_of: "2026-11-05"
+    price_source: https://ai.google.dev/gemini-api/docs/pricing
+  gemini-strong:
+    provider: openai
+    model_id: gemini-3.8-flash
+    base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+    api_key_env: GEMINI_API_KEY
+    max_tokens_param: max_tokens
+    schema_strict: false
+    reasoning_effort: low
+    min_interval_s: 6.0
+    input_price_per_mtok: 0.75
+    output_price_per_mtok: 3.75
+    prices_as_of: "2026-11-05"
+    price_source: https://ai.google.dev/gemini-api/docs/pricing
+    notes: "Paid Standard rate through 2026-12-31; Google lists it doubling from 2027-01-01."
+
+  # Local models with Ollama (free, offline). `ollama pull <model>` first; prices are 0.
+  # local-small:
+  #   provider: openai
+  #   model_id: qwen2.5:3b
+  #   base_url: http://localhost:11434/v1
+  #   max_tokens_param: max_tokens
+  #   schema_strict: false
+  #   input_price_per_mtok: 0
+  #   output_price_per_mtok: 0
+
   # Offline simulated models for tests, CI and demos. Their numbers mean nothing.
   fake-cheap:
     provider: fake

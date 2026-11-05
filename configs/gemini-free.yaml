@@ -1,0 +1,17 @@
+# Free-tier comparison: Gemini 3.1 Flash-Lite (cheap) vs Gemini 3.8 Flash (strong).
+# Needs GEMINI_API_KEY in .env (free key from https://aistudio.google.com/apikey).
+# Calls are throttled per model (min_interval_s in models.yaml), so this takes ~8 minutes.
+# Cost figures in the report are what the run WOULD cost at paid list prices; you pay $0.
+experiment: gemini-free
+task: crash_triage
+dataset: data/crash_triage/eval.jsonl
+fewshot: data/crash_triage/fewshot.jsonl
+models: [gemini-cheap, gemini-strong]
+prompts: [zero_shot, few_shot]
+repeats: 3
+temperature: null    # Google recommends the default temperature for Gemini 3 models
+max_tokens: 2048      # headroom: Gemini's thinking tokens count toward the output limit
+concurrency: 2
+budget_usd: 2.00
+stream: true
+max_attempts: 6

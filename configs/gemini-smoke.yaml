@@ -1,0 +1,12 @@
+# 4-call smoke test: run this first to check your key, model IDs and schema support.
+experiment: gemini-smoke
+task: crash_triage
+dataset: data/crash_triage/dev.jsonl
+models: [gemini-cheap]
+prompts: [zero_shot]
+repeats: 1
+temperature: null    # Google recommends the default temperature for Gemini 3 models
+max_tokens: 2048
+concurrency: 1
+budget_usd: 0.10
+stream: true

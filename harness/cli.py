@@ -9,9 +9,10 @@ from pathlib import Path
 
 import typer
 
-from harness.config import ConfigError, load_experiment
+from harness.config import ConfigError, load_experiment, load_registry
 from harness.dataset import DatasetError, load_items
 from harness.prompts import PromptError
+from harness.providers import ProviderError, make_provider
 from harness.report.analysis import load_run
 from harness.report.chart import write_html
 from harness.report.compare import compare_runs
@@ -21,7 +22,7 @@ from harness.tasks import get_task
 
 app = typer.Typer(add_completion=False, help="Compare models and prompts on a labelled dataset.")
 
-USER_ERRORS = (ConfigError, DatasetError, PromptError, BudgetError, KeyError)
+USER_ERRORS = (ConfigError, DatasetError, PromptError, BudgetError, KeyError, ProviderError)
 
 
 def load_dotenv(path: Path = Path(".env")) -> None:
@@ -157,6 +158,25 @@ def validate_data(
 
         dist = Counter(i.expected[t.category_field] for i in items)
         typer.echo(md_table(["Category", "Items"], [[k, v] for k, v in dist.most_common()]))
+
+
+@app.command(name="list-models")
+def list_models(
+    model_key: str = typer.Argument(..., help="A key from models.yaml, e.g. gemini-strong"),
+    models_file: Path = typer.Option(Path("models.yaml"), help="Model registry"),
+) -> None:
+    """List the model IDs an OpenAI-compatible endpoint offers (check IDs before a run)."""
+    load_dotenv()
+    try:
+        spec = load_registry(models_file).get(model_key)
+        if spec.provider != "openai":
+            raise ConfigError("list-models works for provider: openai (incl. Gemini, Ollama)")
+        provider = make_provider(spec)
+        ids = asyncio.run(provider.list_models())  # type: ignore[attr-defined]
+    except USER_ERRORS as exc:
+        _fail(exc)
+    for model_id in ids:
+        typer.echo(model_id)
 
 
 if __name__ == "__main__":  # pragma: no cover

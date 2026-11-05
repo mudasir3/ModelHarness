@@ -23,6 +23,14 @@ class ModelSpec(BaseModel):
     prices_as_of: str | None = None
     price_source: str | None = None
     notes: str | None = None
+    # OpenAI-compatible endpoints (Gemini, Ollama, Groq, ...). None = the provider's default.
+    base_url: str | None = None
+    api_key_env: str | None = None  # env var holding the key; None for keyless local servers
+    max_tokens_param: Literal["max_completion_tokens", "max_tokens"] = "max_completion_tokens"
+    schema_strict: bool = True  # send "strict": true with the JSON schema
+    reasoning_effort: str | None = None  # e.g. "low" to limit built-in thinking tokens
+    # Client-side throttle: minimum seconds between call starts for this model (free tiers).
+    min_interval_s: float = Field(default=0.0, ge=0)
     # Fake-provider knobs (ignored by real providers).
     fake_error_rate: float = Field(default=0.0, ge=0, le=1)
     fake_invalid_json_rate: float = Field(default=0.0, ge=0, le=1)

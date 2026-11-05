@@ -79,3 +79,30 @@ def test_openai_request_shape():
     assert seen["response_format"]["json_schema"]["strict"] is True
     assert seen["temperature"] == 0.0
     assert (result.input_tokens, result.output_tokens) == (5, 2)
+
+
+def test_openai_compatible_endpoint_options(monkeypatch):
+    pytest.importorskip("openai")
+    from harness.config import ModelSpec
+    from harness.providers.openai import OpenAIProvider
+
+    spec = ModelSpec(
+        provider="openai",
+        model_id="gemini-x",
+        base_url="https://example.test/v1/",
+        api_key_env="GEMINI_API_KEY",
+        max_tokens_param="max_tokens",
+        schema_strict=False,
+        reasoning_effort="low",
+    )
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    with pytest.raises(ProviderError, match="GEMINI_API_KEY"):
+        OpenAIProvider(spec)
+
+    monkeypatch.setenv("GEMINI_API_KEY", "k")
+    provider = OpenAIProvider(spec)
+    assert str(provider.client.base_url) == "https://example.test/v1/"
+    kwargs = provider._kwargs(REQ)
+    assert kwargs["max_tokens"] == 100 and "max_completion_tokens" not in kwargs
+    assert kwargs["reasoning_effort"] == "low"
+    assert "strict" not in kwargs["response_format"]["json_schema"]

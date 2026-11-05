@@ -1,10 +1,16 @@
-"""OpenAI Chat Completions adapter (native schema via response_format json_schema, strict)."""
+"""OpenAI Chat Completions adapter.
+
+Also serves any OpenAI-compatible endpoint (Gemini, Ollama, Groq, ...) through the model's
+base_url and api_key_env in models.yaml, so one adapter covers many providers.
+"""
 
 from __future__ import annotations
 
+import os
 import time
 from typing import Any
 
+from harness.config import ModelSpec
 from harness.providers.base import CallRequest, ProviderError, Result, is_retryable_status
 
 
@@ -12,7 +18,7 @@ class OpenAIProvider:
     name = "openai"
     supports_temperature = True
 
-    def __init__(self, client: Any = None) -> None:
+    def __init__(self, spec: ModelSpec | None = None, client: Any = None) -> None:
         try:
             import openai
         except ImportError as exc:  # pragma: no cover - depends on install extras
@@ -20,12 +26,25 @@ class OpenAIProvider:
                 "openai package not installed: pip install -e '.[openai]'", retryable=False
             ) from exc
         self._sdk = openai
-        self.client = client or openai.AsyncOpenAI(max_retries=0)
+        self.spec = spec or ModelSpec(provider="openai")
+        self.client = client or openai.AsyncOpenAI(
+            api_key=self._api_key(), base_url=self.spec.base_url, max_retries=0
+        )
+
+    def _api_key(self) -> str | None:
+        env = self.spec.api_key_env
+        if env is None:
+            # Keyless local servers (Ollama) still need a non-empty string.
+            return "not-needed" if self.spec.base_url else None
+        key = os.environ.get(env)
+        if not key:
+            raise ProviderError(f"Set {env} in your .env file (see .env.example)", retryable=False)
+        return key
 
     def _kwargs(self, req: CallRequest) -> dict[str, Any]:
         kwargs: dict[str, Any] = {
             "model": req.model_id,
-            "max_completion_tokens": req.max_tokens,
+            self.spec.max_tokens_param: req.max_tokens,
             "messages": [
                 {"role": "system", "content": req.system},
                 {"role": "user", "content": req.user},
@@ -34,11 +53,13 @@ class OpenAIProvider:
         }
         if req.temperature is not None:
             kwargs["temperature"] = req.temperature
+        if self.spec.reasoning_effort:
+            kwargs["reasoning_effort"] = self.spec.reasoning_effort
         if req.schema is not None:
-            kwargs["response_format"] = {
-                "type": "json_schema",
-                "json_schema": {"name": "output", "schema": req.schema, "strict": True},
-            }
+            json_schema: dict[str, Any] = {"name": "output", "schema": req.schema}
+            if self.spec.schema_strict:
+                json_schema["strict"] = True
+            kwargs["response_format"] = {"type": "json_schema", "json_schema": json_schema}
         return kwargs
 
     def _map_error(self, exc: Exception) -> ProviderError:
@@ -98,3 +119,10 @@ class OpenAIProvider:
             request_id=request_id,
             stop_reason=finish,
         )
+
+    async def list_models(self) -> list[str]:
+        try:
+            page = await self.client.models.list()
+        except self._sdk.OpenAIError as exc:
+            raise self._map_error(exc) from exc
+        return sorted(m.id for m in page.data)

@@ -42,6 +42,14 @@ harness estimate configs/crash-triage-v1.yaml # worst-case cost, no API calls
 harness run configs/crash-triage-v1.yaml
 ```
 
+### Free option: Gemini free tier
+
+1. Get a free key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey) and put it in `.env` as `GEMINI_API_KEY=...`.
+2. `harness run configs/gemini-smoke.yaml`: 4 calls to check the key, model IDs and schema support.
+3. `harness run configs/gemini-free.yaml`: Flash-Lite vs Flash, zero-shot vs few-shot, 3 repeats (about 8 minutes, throttled for free-tier limits).
+
+You pay nothing on the free tier. The report's cost columns use Google's paid list prices from `models.yaml`, so they show what the run would cost in production. Free-tier quotas are per project and shown in AI Studio; if calls fail with HTTP 429 and "limit: 0", that model is not free on your project, so switch its `model_id`. Note that on the free tier Google may use prompts to improve its products, so scrub real crash traces before sending them.
+
 Each run writes `runs/<experiment>-<timestamp>/` containing `results.jsonl`, `report.md`, `chart.html`, the resolved config, a price snapshot, copies of the prompts and dataset, and the git commit.
 
 ## Commands
@@ -55,6 +63,7 @@ Each run writes `runs/<experiment>-<timestamp>/` containing `results.jsonl`, `re
 | `harness report <run_dir>` | Re-scores a run offline and rewrites `report.md` and `chart.html`. |
 | `harness compare <run_a> <run_b>` | Cell-by-cell diff; use as a regression check after a prompt change. |
 | `harness validate-data <file.jsonl>` | Validates a dataset and prints its label distribution. |
+| `harness list-models <model_key>` | Lists the model IDs an OpenAI-compatible endpoint (Gemini, Ollama) offers. |
 
 ## Metrics
 
@@ -93,6 +102,8 @@ Create `harness/tasks/<name>/` with a label schema, an output schema, a `score(e
 - **Hand-written backoff with full jitter** (`harness/retry.py`), SDK retries disabled, so every retry is counted and explainable.
 - **Interleaved, seeded call order** so both models share network and rate-limit conditions.
 - **Two budget guards:** a pre-run upper bound, and a live cap that reserves each in-flight call's worst case.
+- **One adapter, many providers.** Gemini, Ollama and other OpenAI-compatible APIs reuse the OpenAI adapter via `base_url` and `api_key_env` per model.
+- **Client-side throttle** (`min_interval_s`) keeps free-tier runs under requests-per-minute limits; retries go through it too.
 - **Temperature is optional.** Current Anthropic models no longer take it, so it is not sent; run-to-run variance is measured with repeats instead.
 
 ## What failed and what I changed
