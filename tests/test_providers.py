@@ -6,11 +6,9 @@ from types import SimpleNamespace
 import pytest
 
 anthropic = pytest.importorskip("anthropic")
-pytest.importorskip("openai")
 
 from harness.providers.anthropic import AnthropicProvider  # noqa: E402
 from harness.providers.base import CallRequest, ProviderError  # noqa: E402
-from harness.providers.openai import OpenAIProvider  # noqa: E402
 
 REQ = CallRequest(
     model_id="m",
@@ -63,6 +61,9 @@ def test_anthropic_error_mapping(status, retryable):
 
 
 def test_openai_request_shape():
+    pytest.importorskip("openai")
+    from harness.providers.openai import OpenAIProvider
+
     seen = {}
 
     async def create(**kwargs):
