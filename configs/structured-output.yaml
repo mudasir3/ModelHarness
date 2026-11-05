@@ -1,0 +1,12 @@
+# Stretch experiment: native schema output vs JSON requested in the prompt.
+# Compare the schema-valid rate between the two output modes.
+experiment: structured-output
+task: crash_triage
+dataset: data/crash_triage/eval.jsonl
+fewshot: data/crash_triage/fewshot.jsonl
+models: [cheap]
+prompts: [zero_shot, prompted_json]
+repeats: 3
+max_tokens: 400
+concurrency: 4
+budget_usd: 0.50

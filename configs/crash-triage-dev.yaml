@@ -1,0 +1,12 @@
+# Prompt iteration on the dev split only. Never report these numbers.
+# Use `harness run configs/crash-triage-dev.yaml --cache` to avoid re-paying while editing prompts.
+experiment: crash-triage-dev
+task: crash_triage
+dataset: data/crash_triage/dev.jsonl
+fewshot: data/crash_triage/fewshot.jsonl
+models: [cheap]
+prompts: [zero_shot, few_shot]
+repeats: 1
+max_tokens: 400
+concurrency: 4
+budget_usd: 0.50

@@ -1,0 +1,11 @@
+.env
+.venv/
+__pycache__/
+*.egg-info/
+.cache/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+# Keep the runs you publish; ignore scratch ones.
+runs/*
+!runs/.gitkeep

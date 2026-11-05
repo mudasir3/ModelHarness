@@ -1,0 +1,14 @@
+# The measured experiment: cheap vs strong model, zero-shot vs few-shot, 3 repeats.
+# Run `harness estimate configs/crash-triage-v1.yaml` first.
+experiment: crash-triage-v1
+task: crash_triage
+dataset: data/crash_triage/eval.jsonl
+fewshot: data/crash_triage/fewshot.jsonl
+models: [cheap, strong]
+prompts: [zero_shot, few_shot]
+repeats: 3
+temperature: null      # current Anthropic models do not take temperature; variance is measured via repeats
+max_tokens: 400
+concurrency: 4
+budget_usd: 2.00
+stream: true

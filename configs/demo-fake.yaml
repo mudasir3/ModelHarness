@@ -1,0 +1,13 @@
+# Offline demo: no API key, no cost. Exercises retries, invalid JSON and variance.
+# Numbers are simulated. Do not publish them.
+experiment: demo-fake
+task: crash_triage
+dataset: data/crash_triage/eval.jsonl
+fewshot: data/crash_triage/fewshot.jsonl
+models: [fake-cheap, fake-strong]
+prompts: [zero_shot, prompted_json]
+repeats: 3
+temperature: 0
+max_tokens: 400
+concurrency: 8
+budget_usd: 1.00

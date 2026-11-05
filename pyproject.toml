@@ -1,0 +1,44 @@
+[project]
+name = "model-harness"
+version = "0.1.0"
+description = "Compare models and prompts on a labelled dataset: accuracy, latency and cost per correct answer."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "typer>=0.12",
+    "pydantic>=2.7",
+    "pyyaml>=6.0",
+    "pandas>=2.2",
+]
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=2.0"]
+openai = ["openai>=1.40"]
+dev = ["pytest>=8", "ruff>=0.5", "mypy>=1.10", "types-PyYAML"]
+
+[project.scripts]
+harness = "harness.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["harness"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+# B008: typer.Option defaults are the library idiom. E501: the formatter owns line length;
+# long HTML/CSS literals in the chart module are left intact.
+ignore = ["B008", "E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true

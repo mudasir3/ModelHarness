@@ -1,0 +1,30 @@
+{
+  "run_id": "demo-fake-20261105-181136",
+  "experiment": "demo-fake",
+  "task": "crash_triage",
+  "started_at": "2026-11-05T13:11:36+00:00",
+  "git_commit": "not-a-git-repo",
+  "harness_version": "0.1.0",
+  "python": "3.13.18",
+  "host": "vm",
+  "dataset_sha256": "609da6714ad34da06c176aaf2f11345a1647d317c6f86bc4d98ca7e3b6202662",
+  "n_items": 12,
+  "n_calls_planned": 144,
+  "estimate_upper_bound_usd": 0.801591,
+  "budget_usd": 1.0,
+  "providers": {
+    "fake-cheap": "fake",
+    "fake-strong": "fake"
+  },
+  "output_modes": {
+    "zero_shot": "native",
+    "prompted_json": "prompted"
+  },
+  "stream": true,
+  "temperature": 0.0,
+  "finished_at": "2026-11-05T13:11:38+00:00",
+  "calls_made": 144,
+  "failed_calls": 0,
+  "spent_usd": 0.225172,
+  "stopped_reason": null
+}

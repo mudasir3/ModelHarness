@@ -1,0 +1,25 @@
+models:
+  fake-cheap:
+    provider: fake
+    model_id: fake-cheap-v1
+    input_price_per_mtok: 0.1
+    output_price_per_mtok: 0.5
+    prices_as_of: null
+    price_source: null
+    notes: null
+    fake_error_rate: 0.25
+    fake_invalid_json_rate: 0.15
+    fake_transient_failure_rate: 0.05
+    fake_latency_ms: 40
+  fake-strong:
+    provider: fake
+    model_id: fake-strong-v1
+    input_price_per_mtok: 4.0
+    output_price_per_mtok: 20.0
+    prices_as_of: null
+    price_source: null
+    notes: null
+    fake_error_rate: 0.05
+    fake_invalid_json_rate: 0.02
+    fake_transient_failure_rate: 0.05
+    fake_latency_ms: 120

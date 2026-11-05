@@ -1,0 +1,62 @@
+# Model registry. Prices are USD per 1M tokens, copied from the provider's official pricing page.
+# Re-check them (and update prices_as_of) before every run whose numbers you will publish.
+# The harness refuses to run a model whose model_id or prices are null.
+
+models:
+  cheap:
+    provider: anthropic
+    model_id: claude-haiku-5-5
+    input_price_per_mtok: 0.10
+    output_price_per_mtok: 0.50
+    prices_as_of: "2026-11-05"
+    price_source: https://platform.claude.com/docs/en/about-claude/pricing
+    notes: "Rate for prompts up to 100K tokens (5x above that). Newer tokenizer: ~30% more tokens than Haiku 4.5 for the same text."
+
+  strong:
+    provider: anthropic
+    model_id: claude-opus-5-5
+    input_price_per_mtok: 4.00
+    output_price_per_mtok: 20.00
+    prices_as_of: "2026-11-05"
+    price_source: https://platform.claude.com/docs/en/about-claude/pricing
+
+  # Optional mid tier, to show a curve instead of two points.
+  mid:
+    provider: anthropic
+    model_id: claude-sonnet-5-5
+    input_price_per_mtok: 2.00
+    output_price_per_mtok: 10.00
+    prices_as_of: "2026-11-05"
+    price_source: https://platform.claude.com/docs/en/about-claude/pricing
+
+  # Fill these from https://openai.com/api/pricing if you use OpenAI instead.
+  openai-cheap:
+    provider: openai
+    model_id: null
+    input_price_per_mtok: null
+    output_price_per_mtok: null
+  openai-strong:
+    provider: openai
+    model_id: null
+    input_price_per_mtok: null
+    output_price_per_mtok: null
+
+  # Offline simulated models for tests, CI and demos. Their numbers mean nothing.
+  fake-cheap:
+    provider: fake
+    model_id: fake-cheap-v1
+    input_price_per_mtok: 0.10
+    output_price_per_mtok: 0.50
+    fake_error_rate: 0.25
+    fake_invalid_json_rate: 0.15
+    fake_transient_failure_rate: 0.05
+    fake_latency_ms: 40
+  fake-strong:
+    provider: fake
+    model_id: fake-strong-v1
+    input_price_per_mtok: 4.00
+    output_price_per_mtok: 20.00
+    fake_error_rate: 0.05
+    fake_invalid_json_rate: 0.02
+    fake_transient_failure_rate: 0.05
+    fake_latency_ms: 120
